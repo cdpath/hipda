@@ -28,7 +28,7 @@ uvx hipda list --limit 20
 uvx hipda read 3446553
 ```
 
-`hipda list` also tries to import automatically if Chrome is already logged in, so most of the time you can skip straight to reading. The old `hipda discovery list` and `hipda discovery read` commands still work.
+`hipda list` hides pinned threads by default; pass `--show-pinned` to include them. It also tries to import automatically if Chrome is already logged in, so most of the time you can skip straight to reading. The old `hipda discovery list` and `hipda discovery read` commands still work.
 
 The cookie is stored at `~/.config/hipda/cookie` and the user agent is stored at `~/.config/hipda/user-agent`, both with `0600` permissions. You can override them per command with `HIPDA_COOKIE` / `--cookie` and `HIPDA_USER_AGENT` / `--user-agent`.
 

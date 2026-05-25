@@ -34,6 +34,21 @@ REALISTIC_LISTING_HTML = """
   <td class="lastpost"><cite><a href="space.php?username=4d4y">4d4y</a></cite><em><a>2022-6-13 22:57</a></em></td>
 </tr>
 </tbody>
+<tbody>
+<tr><td class="folder"></td><td>&nbsp;</td><th class="subject">版块主题</th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+</tbody>
+<tbody id="normalthread_3449572">
+<tr>
+  <td class="folder"><a href="viewthread.php?tid=3449572&amp;extra=page%3D1"><img src="folder_new.gif"></a></td>
+  <td class="icon">&nbsp;</td>
+  <th class="subject new">
+    <span id="thread_3449572"><a href="viewthread.php?tid=3449572&amp;extra=page%3D1">半导体依然疯了.....</a></span>
+  </th>
+  <td class="author"><cite><a href="space.php?uid=521637">yasool</a></cite><em>2026-5-25</em></td>
+  <td class="nums"><strong>15</strong>/<em>517</em></td>
+  <td class="lastpost"><cite><a href="space.php?username=yasool">yasool</a></cite><em><a>2026-5-25 13:58</a></em></td>
+</tr>
+</tbody>
 </body></html>
 """
 
@@ -90,7 +105,7 @@ def test_parse_forum_listing_extracts_threads_and_stats():
 def test_parse_forum_listing_uses_subject_link_when_icon_link_shares_tid():
     threads = parse_forum_listing(REALISTIC_LISTING_HTML, base_url="https://www.4d4y.com/forum/")
 
-    assert len(threads) == 1
+    assert len(threads) == 2
     assert threads[0].tid == "3057651"
     assert threads[0].title == "hipda已迁移到新域名4d4y"
     assert threads[0].author == "4d4y"
@@ -99,6 +114,9 @@ def test_parse_forum_listing_uses_subject_link_when_icon_link_shares_tid():
     assert threads[0].views == 90106
     assert threads[0].last_author == "4d4y"
     assert threads[0].last_at == "2022-6-13 22:57"
+    assert threads[0].is_pinned is True
+    assert threads[1].tid == "3449572"
+    assert threads[1].is_pinned is False
 
 
 def test_parse_thread_extracts_posts():

@@ -41,6 +41,38 @@ def _parse_counts(value: str) -> tuple[int | None, int | None]:
     return int(match.group(1)), int(match.group(2))
 
 
+def _class_names(node) -> set[str]:
+    if node is None:
+        return set()
+    class_value = node.get("class", [])
+    if isinstance(class_value, str):
+        return set(class_value.split())
+    return set(class_value)
+
+
+def _is_pinned_thread(anchor, row) -> bool:
+    nodes = [node for node in (anchor, row) if node]
+    nodes.extend(anchor.find_parents(["tbody", "tr", "th", "td"]))
+
+    for node in nodes:
+        node_id = str(node.get("id", ""))
+        if node_id.startswith("stickthread_"):
+            return True
+        if _class_names(node) & {"stickthread", "sticky", "pinned"}:
+            return True
+
+    tbody = anchor.find_parent("tbody")
+    if tbody is not None:
+        previous_tbody_text = [clean_text(node.get_text("\n")) for node in tbody.find_previous_siblings("tbody")]
+        next_tbody_text = [clean_text(node.get_text("\n")) for node in tbody.find_next_siblings("tbody")]
+        if not any("版块主题" in text for text in previous_tbody_text) and any(
+            "版块主题" in text for text in next_tbody_text
+        ):
+            return True
+
+    return False
+
+
 def parse_forum_listing(html: str, base_url: str) -> list[ThreadSummary]:
     soup = BeautifulSoup(html, "html.parser")
     threads: list[ThreadSummary] = []
@@ -87,6 +119,7 @@ def parse_forum_listing(html: str, base_url: str) -> list[ThreadSummary]:
                 views=views,
                 last_author=last_author,
                 last_at=last_at,
+                is_pinned=_is_pinned_thread(anchor, row),
             )
         )
 

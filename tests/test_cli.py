@@ -1,5 +1,5 @@
 from hipda_cli.auth import default_cookie_path, default_user_agent_path, load_cookie, load_user_agent, save_cookie, save_user_agent
-from hipda_cli.cli import build_parser, load_discovery_page, main
+from hipda_cli.cli import build_parser, load_discovery_page, main, run
 
 
 def test_build_parser_accepts_discovery_list_options():
@@ -47,11 +47,12 @@ def test_main_without_subcommand_from_sys_argv_prints_help(monkeypatch, capsys):
 def test_build_parser_accepts_top_level_list_options():
     parser = build_parser()
 
-    args = parser.parse_args(["list", "--page", "2", "--limit", "5"])
+    args = parser.parse_args(["list", "--page", "2", "--limit", "5", "--show-pinned"])
 
     assert args.command == "list"
     assert args.page == 2
     assert args.limit == 5
+    assert args.show_pinned is True
 
 
 def test_build_parser_accepts_discovery_read_tid():
@@ -178,3 +179,45 @@ def test_load_discovery_page_imports_browser_auth_when_saved_auth_is_missing(mon
         ("", "forumdisplay.php", {"fid": 2, "page": 1}),
         ("cdb_auth=abc", "forumdisplay.php", {"fid": 2, "page": 1}),
     ]
+
+
+def test_list_hides_pinned_threads_by_default(monkeypatch, capsys):
+    html = """
+    <html><body>
+    <tbody id="stickthread_1"><tr>
+      <th><a href="viewthread.php?tid=1">Pinned</a></th>
+      <td>admin<br>2022-1-1</td><td>0/10</td><td>admin<br>2022-1-1</td>
+    </tr></tbody>
+    <tbody id="normalthread_2"><tr>
+      <th><a href="viewthread.php?tid=2">Normal</a></th>
+      <td>user<br>2026-5-25</td><td>1/20</td><td>user<br>2026-5-25</td>
+    </tr></tbody>
+    </body></html>
+    """
+    parser = build_parser()
+    args = parser.parse_args(["list"])
+    monkeypatch.setattr("hipda_cli.cli.load_discovery_page", lambda **kwargs: (html, object()))
+
+    assert run(args) == 0
+
+    out = capsys.readouterr().out
+    assert "Normal" in out
+    assert "Pinned" not in out
+
+
+def test_list_can_show_pinned_threads(monkeypatch, capsys):
+    html = """
+    <html><body>
+    <tbody id="stickthread_1"><tr>
+      <th><a href="viewthread.php?tid=1">Pinned</a></th>
+      <td>admin<br>2022-1-1</td><td>0/10</td><td>admin<br>2022-1-1</td>
+    </tr></tbody>
+    </body></html>
+    """
+    parser = build_parser()
+    args = parser.parse_args(["list", "--show-pinned"])
+    monkeypatch.setattr("hipda_cli.cli.load_discovery_page", lambda **kwargs: (html, object()))
+
+    assert run(args) == 0
+
+    assert "Pinned" in capsys.readouterr().out

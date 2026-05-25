@@ -14,6 +14,7 @@ class ThreadSummary:
     views: int | None = None
     last_author: str = ""
     last_at: str = ""
+    is_pinned: bool = False
 
 
 @dataclass(frozen=True)
@@ -21,4 +22,3 @@ class Post:
     author: str
     published_at: str
     content: str
-

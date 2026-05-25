@@ -31,6 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser = subparsers.add_parser("list", help="List Discovery threads.")
     list_parser.add_argument("--page", type=int, default=1, help="Forum page number.")
     list_parser.add_argument("--limit", type=int, default=30, help="Maximum number of threads to print.")
+    list_parser.add_argument("--show-pinned", action="store_true", help="Include pinned threads.")
 
     read_parser = subparsers.add_parser("read", help="Read a thread by tid or URL.")
     read_parser.add_argument("thread", help="Thread id, or a full viewthread.php URL.")
@@ -49,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser = discovery_subparsers.add_parser("list", help="List Discovery threads.")
     list_parser.add_argument("--page", type=int, default=1, help="Forum page number.")
     list_parser.add_argument("--limit", type=int, default=30, help="Maximum number of threads to print.")
+    list_parser.add_argument("--show-pinned", action="store_true", help="Include pinned threads.")
 
     read_parser = discovery_subparsers.add_parser("read", help="Read a thread by tid or URL.")
     read_parser.add_argument("thread", help="Thread id, or a full viewthread.php URL.")
@@ -180,7 +182,10 @@ def run(args: argparse.Namespace) -> int:
                     file=sys.stderr,
                 )
                 return 2
-            threads = parse_forum_listing(html, base_url=BASE_URL)[: args.limit]
+            threads = parse_forum_listing(html, base_url=BASE_URL)
+            if not args.show_pinned:
+                threads = [thread for thread in threads if not thread.is_pinned]
+            threads = threads[: args.limit]
             for thread in threads:
                 stats = ""
                 if thread.replies is not None and thread.views is not None:
