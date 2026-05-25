@@ -136,6 +136,14 @@ def test_parse_thread_uses_discuz_author_and_date_without_sidebar_noise():
     assert posts[0].content == "不要弹窗、要大容量"
 
 
+def test_parse_thread_extracts_pid_from_post_container_id():
+    posts = parse_thread(THREAD_HTML)
+    realistic_posts = parse_thread(REALISTIC_THREAD_HTML)
+
+    assert [post.pid for post in posts] == ["1", "2"]
+    assert [post.pid for post in realistic_posts] == ["74215032"]
+
+
 def test_detects_login_required_page():
     html = "<html><title>提示信息</title><body>对不起，您还未登录，无权访问该版块。</body></html>"
 

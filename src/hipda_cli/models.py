@@ -22,3 +22,16 @@ class Post:
     author: str
     published_at: str
     content: str
+    pid: str = ""
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    kind: str
+    tid: str
+    title: str
+    snippet: str
+    pid: str | None = None
+    author: str = ""
+    published_at: str = ""
+    url: str = ""

@@ -140,6 +140,8 @@ def parse_thread(html: str) -> list[Post]:
         if not message:
             continue
 
+        pid = str(container.get("id", "")).removeprefix("post_")
+
         author_node = container.select_one(".postauthor > .postinfo a") or container.select_one(".postauthor a")
         if not author_node:
             fallback_author_node = container.select_one(".postauthor")
@@ -158,6 +160,7 @@ def parse_thread(html: str) -> list[Post]:
                 author=clean_text(author_node.get_text()) if author_node else "",
                 published_at=published_at,
                 content=clean_text(message.get_text("\n")),
+                pid=pid,
             )
         )
 
