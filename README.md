@@ -1,4 +1,4 @@
-# hipda-cli
+# hipda
 
 CLI reader for the 4D4Y/HiPDA Discovery channel (`fid=2`).
 
@@ -8,11 +8,24 @@ The site uses browser/session checks, so direct unauthenticated requests may ret
 uvx --from . hipda login
 ```
 
+From PyPI:
+
+```bash
+uvx hipda login
+```
+
 That opens 4D4Y in Google Chrome. After you finish logging in, return to the terminal and press Enter. Then read Discovery:
 
 ```bash
 uvx --from . hipda list --limit 20
 uvx --from . hipda read 3446553
+```
+
+From PyPI:
+
+```bash
+uvx hipda list --limit 20
+uvx hipda read 3446553
 ```
 
 `hipda list` also tries to import automatically if Chrome is already logged in, so most of the time you can skip straight to reading. The old `hipda discovery list` and `hipda discovery read` commands still work.

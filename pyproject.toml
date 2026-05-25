@@ -1,5 +1,5 @@
 [project]
-name = "hipda-cli"
+name = "hipda"
 version = "0.1.10"
 description = "CLI reader for 4D4Y/HiPDA Discovery forum posts."
 readme = "README.md"
@@ -15,3 +15,6 @@ hipda = "hipda_cli.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hipda_cli"]
