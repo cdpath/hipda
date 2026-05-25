@@ -1,6 +1,6 @@
 [project]
 name = "hipda"
-version = "0.1.12"
+version = "0.2.1"
 description = "CLI reader for 4D4Y/HiPDA Discovery forum posts."
 readme = "README.md"
 requires-python = ">=3.11"
