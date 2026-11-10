@@ -4,7 +4,10 @@ import logging
 import warnings
 
 with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=SyntaxWarning, module=r"jieba(\..*)?")
+    # jieba 0.42.1 ships regexes that trip SyntaxWarning on Python 3.12+.
+    # The module= filter does not match compile-time warnings, so ignore the
+    # category for the duration of this import only.
+    warnings.simplefilter("ignore", SyntaxWarning)
     import jieba
 
 
