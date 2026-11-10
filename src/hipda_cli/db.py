@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from .models import Post, ThreadSummary
+from .parser import normalize_date
 from .text import segment_text
 
 
@@ -70,7 +71,36 @@ def connect(path: str | Path) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path))
     conn.executescript(SCHEMA_SQL)
+    _migrate(conn)
     return conn
+
+
+SCHEMA_VERSION = 1
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """One-shot migrations keyed off ``PRAGMA user_version``."""
+    version = conn.execute("pragma user_version").fetchone()[0]
+    if version >= SCHEMA_VERSION:
+        return
+    # v1: zero-pad historical Discuz dates ("2026-9-9" -> "2026-09-09") so
+    # lexicographic ordering in queries.py sorts correctly.
+    if version < 1:
+        _migrate_pad_dates(conn)
+    conn.execute(f"pragma user_version = {SCHEMA_VERSION}")
+    conn.commit()
+
+
+def _migrate_pad_dates(conn: sqlite3.Connection) -> None:
+    for table, column in (("threads", "created_at"), ("threads", "last_at"), ("posts", "published_at")):
+        rows = conn.execute(f"select rowid, {column} from {table} where {column} != ''").fetchall()
+        for rowid, value in rows:
+            padded = normalize_date(value)
+            if padded != value:
+                conn.execute(
+                    f"update {table} set {column} = ? where rowid = ?",
+                    (padded, rowid),
+                )
 
 
 def upsert_threads(

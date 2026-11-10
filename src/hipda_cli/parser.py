@@ -10,6 +10,24 @@ from .models import Post, ThreadSummary
 
 THREAD_RE = re.compile(r"(?:^|[?&])tid=(\d+)")
 WHITESPACE_RE = re.compile(r"[ \t\r\f\v]+")
+# Matches Discuz dates like "2026-5-3", "2026-5-03", "2026-11-10", with
+# optional time. Month/day are single digits on the live site, which breaks
+# lexicographic `order by last_at` (e.g. "2026-9-9" > "2026-11-10"), so we
+# zero-pad every stored date.
+DATE_RE = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})(.*)$")
+
+
+def normalize_date(value: str) -> str:
+    """Zero-pad a Discuz date like ``2026-9-9 23:44`` into ``2026-09-09 23:44``.
+
+    Values without a ``YYYY-M-D`` prefix (e.g. bare times like ``13:08``,
+    empty strings) are returned unchanged.
+    """
+    match = DATE_RE.match(value.strip())
+    if not match:
+        return value
+    year, month, day, rest = match.groups()
+    return f"{year}-{int(month):02d}-{int(day):02d}{rest}"
 
 
 def clean_text(value: str) -> str:
@@ -106,6 +124,8 @@ def parse_forum_listing(html: str, base_url: str) -> list[ThreadSummary]:
                 last_lines = _split_cell_lines(trailing_cells[2])
                 last_author = last_lines[0] if last_lines else ""
                 last_at = last_lines[1] if len(last_lines) > 1 else ""
+        created_at = normalize_date(created_at)
+        last_at = normalize_date(last_at)
 
         seen.add(tid)
         threads.append(
@@ -154,6 +174,7 @@ def parse_thread(html: str) -> list[Post]:
         )
         info_text = clean_text(info_node.get_text("\n")) if info_node else ""
         published_at = re.sub(r"^发表于\s*", "", info_text.splitlines()[0]).strip() if info_text else ""
+        published_at = normalize_date(published_at)
 
         posts.append(
             Post(

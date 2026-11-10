@@ -314,3 +314,56 @@ def test_posts_fts_indexes_content_for_search(tmp_path):
         conn.close()
 
     assert rows == [("74283570",)]
+
+
+def test_connect_pads_legacy_unpadded_dates(tmp_path):
+    db = tmp_path / "legacy.sqlite"
+    conn = connect(db)
+    conn.execute("pragma user_version = 0")
+    conn.execute(
+        "insert into threads (tid, title, author, created_at, last_at, last_author,"
+        " replies, views, is_pinned, url, first_seen_at, last_seen_at, fetched_at)"
+        " values ('1', 't', 'a', '2026-9-9', '2026-9-10 23:44', 'b', 1, 2, 0, '', '', '', '')"
+    )
+    conn.execute(
+        "insert into posts (pid, tid, position, author, published_at, content, fetched_at)"
+        " values ('11', '1', 1, 'a', '2026-9-9 23:44', 'body', '')"
+    )
+    conn.commit()
+    conn.close()
+
+    conn = connect(db)
+    thread_created, thread_last = conn.execute(
+        "select created_at, last_at from threads where tid = '1'"
+    ).fetchone()
+    post_published = conn.execute(
+        "select published_at from posts where pid = '11'"
+    ).fetchone()[0]
+    assert (thread_created, thread_last) == ("2026-09-09", "2026-09-10 23:44")
+    assert post_published == "2026-09-09 23:44"
+
+
+def test_connect_migration_runs_only_once(tmp_path):
+    db = tmp_path / "legacy.sqlite"
+    conn = connect(db)
+    conn.execute("pragma user_version = 0")
+    conn.execute(
+        "insert into threads (tid, title, author, created_at, last_at, last_author,"
+        " replies, views, is_pinned, url, first_seen_at, last_seen_at, fetched_at)"
+        " values ('1', 't', 'a', '2026-9-9', '', 'b', 1, 2, 0, '', '', '', '')"
+    )
+    conn.commit()
+    conn.close()
+
+    connect(db).close()
+    # Corrupt a row after the migration has already run; a second connect must
+    # not rewrite it (user_version guard works).
+    import sqlite3
+
+    raw = sqlite3.connect(db)
+    raw.execute("update threads set created_at = '2026-9-9' where tid = '1'")
+    raw.commit()
+    raw.close()
+
+    conn = connect(db)
+    assert conn.execute("select created_at from threads where tid = '1'").fetchone()[0] == "2026-9-9"

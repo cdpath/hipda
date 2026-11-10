@@ -109,11 +109,11 @@ def test_parse_forum_listing_uses_subject_link_when_icon_link_shares_tid():
     assert threads[0].tid == "3057651"
     assert threads[0].title == "hipda已迁移到新域名4d4y"
     assert threads[0].author == "4d4y"
-    assert threads[0].created_at == "2022-6-13"
+    assert threads[0].created_at == "2022-06-13"
     assert threads[0].replies == 0
     assert threads[0].views == 90106
     assert threads[0].last_author == "4d4y"
-    assert threads[0].last_at == "2022-6-13 22:57"
+    assert threads[0].last_at == "2022-06-13 22:57"
     assert threads[0].is_pinned is True
     assert threads[1].tid == "3449572"
     assert threads[1].is_pinned is False
@@ -123,7 +123,7 @@ def test_parse_thread_extracts_posts():
     posts = parse_thread(THREAD_HTML)
 
     assert [post.author for post in posts] == ["老兵-猫族", "leeice"]
-    assert posts[0].published_at == "2026-5-7 19:12"
+    assert posts[0].published_at == "2026-05-07 19:12"
     assert posts[0].content == "动画做得还不错。\n节奏可以。"
 
 
@@ -132,7 +132,7 @@ def test_parse_thread_uses_discuz_author_and_date_without_sidebar_noise():
 
     assert len(posts) == 1
     assert posts[0].author == "死老妖"
-    assert posts[0].published_at == "2026-5-8 11:55"
+    assert posts[0].published_at == "2026-05-08 11:55"
     assert posts[0].content == "不要弹窗、要大容量"
 
 
@@ -148,3 +148,20 @@ def test_detects_login_required_page():
     html = "<html><title>提示信息</title><body>对不起，您还未登录，无权访问该版块。</body></html>"
 
     assert is_login_required_page(html) is True
+
+
+def test_normalize_date_pads_single_digit_month_and_day():
+    from hipda_cli.parser import normalize_date
+
+    assert normalize_date("2026-9-9 23:44") == "2026-09-09 23:44"
+    assert normalize_date("2026-11-10") == "2026-11-10"
+    assert normalize_date("2022-6-3") == "2022-06-03"
+    assert normalize_date("13:08") == "13:08"
+    assert normalize_date("") == ""
+
+
+def test_parse_forum_listing_zero_pads_dates():
+    threads = parse_forum_listing(LISTING_HTML, base_url="https://www.4d4y.com/forum/")
+
+    assert threads[0].created_at == "2026-05-07"
+    assert threads[0].last_at == "2026-05-08 11:56"

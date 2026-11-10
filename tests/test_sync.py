@@ -56,8 +56,8 @@ def test_sync_listing_page_fetches_parses_and_upserts(tmp_path):
 
     assert (inserted, updated) == (2, 0)
     assert rows == [
-        ("3057651", "hipda已迁移到新域名4d4y", "4d4y", "2022-6-13 22:57", "2026-05-26T00:00:00Z"),
-        ("3449572", "半导体依然疯了.....", "yasool", "2026-5-25 13:58", "2026-05-26T00:00:00Z"),
+        ("3057651", "hipda已迁移到新域名4d4y", "4d4y", "2022-06-13 22:57", "2026-05-26T00:00:00Z"),
+        ("3449572", "半导体依然疯了.....", "yasool", "2026-05-25 13:58", "2026-05-26T00:00:00Z"),
     ]
     assert client.calls == [("forumdisplay.php", {"fid": 2, "page": 1})]
 
